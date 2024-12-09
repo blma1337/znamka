@@ -4,18 +4,26 @@ body
     background-color: #1b1b1b;
     font-family: sans-serif;
     text-align: center;
-    place-content: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    min-height: 100vh;
 }
 
 h1
 {
     margin-top: 42px;
+    font-size: 2em;
 }
 
 .entry
 {
     padding: 21px;
     font-weight: bold;
+    width: 90%;
+    max-width: 600px;
 }
 
 .btn
@@ -97,19 +105,23 @@ input[type="radio"]:checked::before
 .mainContent
 {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    justify-content: center;
-    position: relative;
+    width: 90%;
+    max-width: 800px;
 }
 
 .tableDiv
 {
     border-radius: 5px;
+    width: 100%;
 }
 
 .resultTable
 {
     border-collapse: collapse;
+    width: 100%;
+    max-width: 600px;
     min-width: 156px;
     margin: 20px 0;
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.56);
@@ -119,10 +131,9 @@ input[type="radio"]:checked::before
 .optionsDiv
 {
     display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-    text-align: center;
+    justify-content: space-around;
+    width: 90%;
+    max-width: 800px;
 }
 
 .optionsTable
@@ -182,4 +193,25 @@ input[type="radio"]:checked::before
 {
     color: white;
     background-color: #292929;
+}
+
+/* Responzivní úpravy */
+@media (max-width: 768px) {
+    .entry, .mainContent, .optionsDiv {
+        width: 100%;
+    }
+
+    .resultTable {
+        font-size: 0.9em;
+    }
+}
+
+@media (max-width: 480px) {
+    h1 {
+        font-size: 1.5em;
+    }
+
+    .resultTable th, .resultTable td {
+        padding: 4px 2px;
+    }
 }
