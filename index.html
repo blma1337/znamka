@@ -269,22 +269,30 @@
     //  Přepočet tabulky
     // ==============================
     function updateTable(){
-      // validace vstupu jako v původním skriptu
       const raw = document.getElementById('points').value;
-      let max = parseInt(raw, 10);
-      if(Number.isNaN(max)){
-        alert('Špatný formát vstupu!!');
-        return;
-      }
-      if(max < 1){
-        alert('Počet bodů nemůže být záporný ani nula!!');
-        document.getElementById('points').value = '20';
-        return;
-      }
-      if(max > 1000){
-        alert('Počet bodů nemůže být víc než 1000!');
-        document.getElementById('points').value = '20';
-        return;
+      let max;
+
+      // prázdný vstup => 0 (bez upozornění)
+      if(raw.trim() === ''){
+        max = 0;
+      }else{
+        max = parseInt(raw, 10);
+        if(Number.isNaN(max)){
+          // neplatné číslo => ber jako 0, bez alertu
+          max = 0;
+        }else{
+          // zachovej původní validace pro skutečně zadaná čísla
+          if(max < 1){
+            alert('Počet bodů nemůže být záporný ani nula!!');
+            document.getElementById('points').value = '20';
+            return;
+          }
+          if(max > 1000){
+            alert('Počet bodů nemůže být víc než 1000!');
+            document.getElementById('points').value = '20';
+            return;
+          }
+        }
       }
 
       const scheme = document.querySelector('input[name="scheme"]:checked').value; // 'SS' nebo 'ZS'
@@ -292,26 +300,30 @@
 
       tbody.innerHTML = '';
 
-      let last = max; // horní hranice pro aktuální stupeň (stejně jako v původním kódu)
+      let last = max;
       for(let i=0; i<5; i++){
         const [upperPct, lowerPct] = pairs[i];
         const upperPts = last;
         const lowerPts = Math.ceil(max * (lowerPct/100));
+
+        // při max=0 zabraň záporným číslům ve výpisu
+        const u = Math.max(0, upperPts);
+        const l = Math.max(0, lowerPts);
+
         const pctText = `${lowerPct}–${upperPct} %`;
-        const display = lowerPts>upperPts ? `${upperPts} – ${lowerPts}` : `${lowerPts} – ${upperPts}`;
+        const display = l>u ? `${u} – ${l}` : `${l} – ${u}`;
 
         const tr = document.createElement('tr');
         tr.innerHTML = `
-          <td><span class=\"badge\">${i+1}</span></td>
-          <td class=\"range\">${display} <span class=\"subpct\">(${pctText})</span></td>
+          <td><span class="badge">${i+1}</span></td>
+          <td class="range">${display} <span class="subpct">(${pctText})</span></td>
         `;
         tr.classList.add('pop');
         tbody.appendChild(tr);
 
-        last = lowerPts - 1; // posun horní hranice pro další stupeň (jako v originálu)
+        last = lowerPts - 1;
       }
 
-      // ulož poslední nastavení
       localStorage.setItem('points', String(max));
       localStorage.setItem('scheme', scheme);
     }
