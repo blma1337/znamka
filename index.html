@@ -285,11 +285,13 @@
           if(max < 1){
             alert('Počet bodů nemůže být záporný ani nula!!');
             document.getElementById('points').value = '20';
+            updateTable();
             return;
           }
           if(max > 1000){
             alert('Počet bodů nemůže být víc než 1000!');
             document.getElementById('points').value = '20';
+            updateTable();
             return;
           }
         }
