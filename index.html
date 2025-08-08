@@ -1,99 +1,335 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="cs" data-theme="auto">
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1.7">
-<link type="text/css" href="znamka.css" media="all" rel="stylesheet">
-<script type="text/javascript">
-function calc()
-{
-  x=parseInt(document.getElementById("points").value);
-  if(isNaN(x))
-  {
-    alert("Špatný formát vstupu!!");
-    return;
-  }
-  if(x<1)
-  {
-    alert("Počet bodů nemůže být záporný ani nula!!");
-    document.getElementById("points").value="20";
-    return;
-  }
-  if(x>1000)
-  {
-    alert("Počet bodů nemůže být víc než 1000!");
-    document.getElementById("points").value="20";
-    return;
-  }
-  //generate table
-  let table="<table class=\"resultTable\"><tbody>";
-  table+="<tr><th class=\"top\" colspan=\"4\">Bodování</th></tr>";
-  table+="<tr><th colspan=\"1\">Známka</th><th colspan=\"3\">Rozpětí</th></tr>";
-  let sel=0;
-  if(document.getElementById("SŠ").checked)
-  {
-    sel=0;
-  }
-  if(document.getElementById("ZŠ").checked)
-  {
-    sel=1;
-  }
-  let percentage=[[[100,85],[84,69],[68,52],[51,33],[32,0]],[[100,90],[89,75],[74,45],[44,25],[24,0]]];
-  let last=x;
-  for(let i=0;i<5;i++)
-  {
-    table+="<tr>";
-    //grade
-    table+="<td class=\"grade\">";
-    table+=(i+1).toString();
-    table+="</td>";
-    //points
-    table+="<td>";
-    let indx=i+1;
-    if(indx>=5)
-    {
-      indx=0;
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Stránka na výpočet hodnocení — moderní verze</title>
+  <meta name="description" content="Kalkulačka bodového hodnocení se světlým/tmavým režimem a animacemi. ZŠ/SŠ hranice, červený akcent." />
+  <style>
+    :root{
+      /* barevné proměnné (světlý) */
+      --bg: #fafafa;
+      --bg-soft: #ffffff;
+      --text: #161616;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --shadow: 0 10px 30px rgba(0,0,0,.08);
+      --accent: #e11d48; /* červený nádech */
+      --accent-600: #be123c;
+      --accent-50: #fff1f2;
+      --glass: rgba(255,255,255,.7);
+      --ring: rgba(225,29,72,.35);
     }
-    p0=((percentage[sel][i][1]+percentage[sel][indx][0])/200.0)*x;
-    p1=last;
-    p2=Math.ceil((percentage[sel][i][1]/100.0)*x);
-    //or floor, but there will be minimal range at 1st grade
-    last=p2-1;
-    table+=p1.toString();
-    table+="</td>";
-    table+="<td>"+"-"+"</td>";
-    table+="<td>";
-    table+=p2.toString();
-    table+="</td>";
-    table+="</tr>";
-  }
-  table+="</tbody></table>";
-  document.getElementById("tableDiv").innerHTML=table;
-}
-</script>
-</head>
+    html[data-theme="dark"]{
+      --bg: #0b0b0c;
+      --bg-soft: #111113;
+      --text: #f5f5f7;
+      --muted: #a1a1aa;
+      --border: #26272b;
+      --shadow: 0 10px 30px rgba(0,0,0,.4);
+      --accent: #fb7185; /* světlejší červená pro tmavý */
+      --accent-600: #f43f5e;
+      --accent-50: rgba(251,113,133,.12);
+      --glass: rgba(17,17,19,.6);
+      --ring: rgba(244,63,94,.35);
+    }
 
+    /* Globální layout */
+    *{box-sizing:border-box}
+    body{
+      margin:0; font: 16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      color:var(--text); background: var(--bg);
+      min-height: 100dvh; display:grid; place-items:center;
+      position:relative; overflow-x:hidden;
+    }
+    /* jemný animovaný gradient v pozadí */
+    .bg-grad{
+      position:fixed; inset:-20vmax; z-index:-1; filter: blur(80px) saturate(120%);
+      background: radial-gradient(60vmax 60vmax at 20% 20%, var(--accent-50), transparent 60%),
+                  radial-gradient(60vmax 60vmax at 80% 30%, rgba(244,63,94,.12), transparent 60%),
+                  radial-gradient(60vmax 60vmax at 50% 80%, rgba(225,29,72,.12), transparent 60%);
+      animation: float 20s ease-in-out infinite alternate;
+      pointer-events:none;
+    }
+    @keyframes float { from{transform:translateY(-2%)} to{transform:translateY(2%)} }
+
+    .wrap{ width:min(950px, 96%); padding: 24px; }
+
+    .card{
+      background: var(--glass); backdrop-filter: saturate(1.1) blur(10px);
+      border:1px solid var(--border); border-radius: 20px; box-shadow: var(--shadow);
+      padding: clamp(18px, 5vw, 28px);
+    }
+
+    header{
+      display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:18px;
+    }
+    .title{
+      display:flex; align-items:center; gap:12px;
+    }
+    .logo{ width:44px; height:44px; border-radius:12px; display:grid; place-items:center; background: transparent; box-shadow:none; }
+    .logo svg{ width:100%; height:100%; filter: drop-shadow(0 4px 10px var(--ring)); }
+    h1{ font-size: clamp(1.1rem, 1rem + 1.2vw, 1.6rem); margin:0; }
+    .sub{ color:var(--muted); font-size: .95rem; }
+
+    /* Tlačítko pro téma */
+    .theme-toggle{
+      --size:40px; width:var(--size); height:var(--size); border-radius:12px; border:1px solid var(--border);
+      background: var(--bg-soft); display:grid; place-items:center; cursor:pointer; position:relative;
+      transition:.2s transform ease, .2s box-shadow ease, .2s background ease;
+    }
+    .theme-toggle:hover{ transform: translateY(-2px); box-shadow: var(--shadow); }
+    .theme-toggle:active{ transform: translateY(0); }
+    .theme-toggle svg{ width:22px; height:22px; }
+
+    /* Ovládací prvky */
+    .controls{ display:grid; grid-template-columns: 1fr; gap:14px; margin: 14px 0 22px; }
+
+    .segmented{
+      display:inline-grid; grid-auto-flow:column; background: var(--bg-soft); border:1px solid var(--border);
+      border-radius: 14px; padding:4px; gap:4px; width: fit-content;
+    }
+    .segmented input{ display:none; }
+    .segmented label{
+      padding: 8px 14px; border-radius: 10px; cursor:pointer; user-select:none;
+      transition: .2s background ease, .2s color ease, .2s transform ease; color:var(--muted);
+      font-weight:600; letter-spacing:.2px;
+    }
+    .segmented input:checked + label{
+      background: var(--accent-50); color: var(--text); outline: 2px solid var(--ring); outline-offset: 0; transform: translateY(-1px);
+    }
+
+    .field{ display:grid; gap:8px; }
+    .field label{ font-weight:600; }
+    .input-wrap{ display:flex; align-items:center; gap:10px; }
+    .input-wrap input[type="number"]{
+      width: 140px; padding: 10px 12px; border-radius: 12px; border:1px solid var(--border); background: var(--bg-soft);
+      color:var(--text); font-weight:600; box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
+      transition:.2s border-color ease, .2s box-shadow ease;
+    }
+    .input-wrap input[type="number"]:focus{ outline:none; border-color: var(--accent); box-shadow: 0 0 0 4px var(--ring); }
+
+    .hint{ color:var(--muted); font-size:.92rem; }
+
+    /* Tabulka */
+    .table{
+      width:100%; border-collapse: collapse; overflow: hidden; border-radius: 14px; border:1px solid var(--border); background: var(--bg-soft);
+    }
+    .table th, .table td{ padding: 12px 14px; text-align:left; }
+    .table thead th{ background: linear-gradient(0deg, transparent, transparent), var(--bg-soft); position: sticky; top:0; z-index:1; border-bottom:1px solid var(--border); }
+    .table tbody tr{ border-top:1px solid var(--border); transition: background .2s ease; }
+    .table tbody tr:hover{ background: rgba(0,0,0,.03); }
+    .badge{ font: 600 0.95rem/1.2 inherit; padding: 6px 10px; border-radius: 10px; background: var(--accent-50); color: var(--text); border:1px solid var(--border); }
+    .range{ font-weight:700; }
+    .subpct{ color: var(--muted); font-weight: 500; margin-left:8px; }
+
+    /* Animace při přepočtu */
+    .pop{ animation: pop .35s ease; }
+    @keyframes pop{ 0%{ transform: translateY(4px); opacity:.3; } 60%{ transform: translateY(-2px); opacity:1; } 100%{ transform: translateY(0); } }
+
+    footer{ margin-top: 18px; color:var(--muted); font-size:.9rem; display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; }
+    .pill{ padding:6px 10px; border:1px dashed var(--border); border-radius:999px; }
+
+    /* Responsivita */
+    @media (min-width: 720px){
+      .controls{ grid-template-columns: 1fr auto; align-items:end; }
+      .field{ grid-template-columns: 1fr auto; align-items:center; }
+      .field label{ grid-column: 1 / -1; }
+    }
+  </style>
+</head>
 <body>
-<h1>Stránka na výpočet hodnocení</h1>
-<div class="entry">
-  Počet bodů: <input class="num" type="number" id="points" min="1" max="1000" value="20" onchange="calc();"><input class="btn" type="button" value="Vypočítej" onclick="calc();">
-</div>
-<div class="optionsDiv">
-  <table class="optionsTable">
-    <tbody>
-      <tr>
-        <td>Druh hodnocení: </td>
-        <td><input type="radio" checked name="kind" id="SŠ" onchange="calc();"></td>
-        <td><label for="SŠ">SŠ</label></td>
-        <td><input type="radio" name="kind" id="ZŠ" onchange="calc();"></td>
-        <td><label for="ZŠ">ZŠ</label></td>
-      </tr>
-    </tbody>
-  </table>
-</div>
-<div class="mainContent">
-<div id="tableDiv">
-  <table class="resultTable"><tbody><tr><th class="top" colspan="4">Bodování</th></tr><tr><th colspan="1">Známka</th><th colspan="3">Rozpětí</th></tr><tr><td class="grade">1</td><td></td><td>-</td><td></td></tr><tr><td class="grade">2</td><td></td><td>-</td><td></td></tr><tr><td class="grade">3</td><td></td><td>-</td><td></td></tr><tr><td class="grade">4</td><td></td><td>-</td><td></td></tr><tr><td class="grade">5</td><td></td><td>-</td><td></td></tr></tbody></table>
-</div>
-</div>
+  <div class="bg-grad" aria-hidden="true"></div>
+  <div class="wrap">
+    <div class="card">
+      <header>
+        <div class="title">
+          <div class="logo" aria-hidden="true">
+            <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Logo školy (mřížka)">
+              <defs>
+                <linearGradient id="grad" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0" stop-color="#FACC15"/>
+                  <stop offset="0.55" stop-color="#F59E0B"/>
+                  <stop offset="1" stop-color="#EF4444"/>
+                </linearGradient>
+              </defs>
+              <g fill="url(#grad)" opacity="0.9">
+                <rect x="4" y="4" width="7" height="7" rx="1.5"/>
+                <rect x="15" y="4" width="7" height="7" rx="1.5"/>
+                <rect x="26" y="4" width="7" height="7" rx="1.5"/>
+                <rect x="37" y="4" width="7" height="7" rx="1.5"/>
+
+                <rect x="4" y="15" width="7" height="7" rx="1.5"/>
+                <rect x="15" y="15" width="7" height="7" rx="1.5"/>
+                <rect x="26" y="15" width="7" height="7" rx="1.5"/>
+                <rect x="37" y="15" width="7" height="7" rx="1.5"/>
+
+                <rect x="4" y="26" width="7" height="7" rx="1.5"/>
+                <rect x="15" y="26" width="7" height="7" rx="1.5"/>
+                <rect x="26" y="26" width="7" height="7" rx="1.5"/>
+                <rect x="37" y="26" width="7" height="7" rx="1.5"/>
+
+                <rect x="4" y="37" width="7" height="7" rx="1.5"/>
+                <rect x="15" y="37" width="7" height="7" rx="1.5"/>
+                <rect x="26" y="37" width="7" height="7" rx="1.5"/>
+                <rect x="37" y="37" width="7" height="7" rx="1.5"/>
+              </g>
+            </svg>
+          </div>
+          <div>
+            <h1>Stránka na výpočet hodnocení</h1>
+          </div>
+        </div>
+        <button id="themeBtn" class="theme-toggle" aria-label="Přepnout téma (světlý/tmavý)">
+          <!-- ikona se přepíná v JS -->
+          <svg id="iconMoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </button>
+      </header>
+
+      <div class="controls">
+        <div class="field">
+          <label for="points">Počet bodů (max)</label>
+          <div class="input-wrap">
+            <input id="points" type="number" min="1" max="1000" step="1" value="20" inputmode="numeric" />
+            <div class="hint">Zadej celkový počet dosažitelných bodů v testu.</div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Druh hodnocení</label>
+          <div class="segmented" role="tablist" aria-label="Druh hodnocení">
+            <input type="radio" name="scheme" id="ss" value="SS" checked>
+            <label for="ss" role="tab" aria-controls="table">SŠ</label>
+            <input type="radio" name="scheme" id="zs" value="ZS">
+            <label for="zs" role="tab" aria-controls="table">ZŠ</label>
+          </div>
+        </div>
+      </div>
+
+      <table class="table" id="table">
+        <thead>
+          <tr>
+            <th>Známka</th>
+            <th>Rozpětí (body)</th>
+          </tr>
+        </thead>
+        <tbody id="tbody">
+          <!-- plní JS -->
+        </tbody>
+      </table>
+
+      
+    </div>
+  </div>
+
+  <script>
+    // ==============================
+    //  Konfigurace hranic procent
+    // ==============================
+    // Definice jako pole dolních hranic v procentech (sestupně po známkách 1→5)
+    const PERCENTS = {
+      SS: { name: 'SŠ', pairs: [[100,85],[84,69],[68,52],[51,33],[32,0]] }, // podle původního skriptu
+      ZS: { name: 'ZŠ', pairs: [[100,90],[89,75],[74,45],[44,25],[24,0]] },
+    };
+
+    // DOM prvky
+    const pointsEl = document.getElementById('points');
+    const schemeRadios = document.querySelectorAll('input[name="scheme"]');
+    const tbody = document.getElementById('tbody');
+    const themeBtn = document.getElementById('themeBtn');
+
+    // ==============================
+    //  Téma (světlý/tmavý) s uložením
+    // ==============================
+    const preferred = localStorage.getItem('theme') || 'auto';
+    applyTheme(preferred);
+
+    themeBtn.addEventListener('click', () => {
+      const current = document.documentElement.getAttribute('data-theme');
+      const next = current === 'dark' ? 'light' : 'dark';
+      applyTheme(next);
+      localStorage.setItem('theme', next);
+      themeBtn.classList.add('pop'); setTimeout(()=>themeBtn.classList.remove('pop'), 350);
+    });
+
+    function applyTheme(mode){
+      if(mode === 'auto'){
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        document.documentElement.setAttribute('data-theme', prefersDark ? 'dark':'light');
+      }else{
+        document.documentElement.setAttribute('data-theme', mode);
+      }
+      // ikona
+      themeBtn.innerHTML = document.documentElement.getAttribute('data-theme') === 'dark'
+        ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>'
+        : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+    }
+
+    // ==============================
+    //  Přepočet tabulky
+    // ==============================
+    function updateTable(){
+      // validace vstupu jako v původním skriptu
+      const raw = document.getElementById('points').value;
+      let max = parseInt(raw, 10);
+      if(Number.isNaN(max)){
+        alert('Špatný formát vstupu!!');
+        return;
+      }
+      if(max < 1){
+        alert('Počet bodů nemůže být záporný ani nula!!');
+        document.getElementById('points').value = '20';
+        return;
+      }
+      if(max > 1000){
+        alert('Počet bodů nemůže být víc než 1000!');
+        document.getElementById('points').value = '20';
+        return;
+      }
+
+      const scheme = document.querySelector('input[name="scheme"]:checked').value; // 'SS' nebo 'ZS'
+      const pairs = PERCENTS[scheme].pairs; // [[upper%, lower%], ...] pro známky 1..5
+
+      tbody.innerHTML = '';
+
+      let last = max; // horní hranice pro aktuální stupeň (stejně jako v původním kódu)
+      for(let i=0; i<5; i++){
+        const [upperPct, lowerPct] = pairs[i];
+        const upperPts = last;
+        const lowerPts = Math.ceil(max * (lowerPct/100));
+        const pctText = `${lowerPct}–${upperPct} %`;
+        const display = lowerPts>upperPts ? `${upperPts} – ${lowerPts}` : `${lowerPts} – ${upperPts}`;
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><span class=\"badge\">${i+1}</span></td>
+          <td class=\"range\">${display} <span class=\"subpct\">(${pctText})</span></td>
+        `;
+        tr.classList.add('pop');
+        tbody.appendChild(tr);
+
+        last = lowerPts - 1; // posun horní hranice pro další stupeň (jako v originálu)
+      }
+
+      // ulož poslední nastavení
+      localStorage.setItem('points', String(max));
+      localStorage.setItem('scheme', scheme);
+    }
+
+    // Obsluha vstupů
+    pointsEl.addEventListener('input', () => updateTable());
+    schemeRadios.forEach(r=> r.addEventListener('change', updateTable));
+
+    // Inicializace z localStorage + první výpočet
+    (function init(){
+      const savedPoints = Number(localStorage.getItem('points'));
+      const savedScheme = localStorage.getItem('scheme');
+      if(savedPoints && savedPoints>0) pointsEl.value = String(Math.floor(savedPoints));
+      if(savedScheme && (savedScheme==='SS'||savedScheme==='ZS')){
+        document.querySelector(`input[name="scheme"][value="${savedScheme}"]`).checked = true;
+      }
+      updateTable();
+    })();
+  </script>
 </body>
 </html>
