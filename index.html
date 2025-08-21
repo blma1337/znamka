@@ -69,6 +69,18 @@
     }
     .logo{ width:44px; height:44px; border-radius:12px; display:grid; place-items:center; background: transparent; box-shadow:none; }
     .logo svg{ width:100%; height:100%; filter: drop-shadow(0 4px 10px var(--ring)); }
+    /* SSP Krnov – animace buněk loga */
+    :root{ --dur: 900ms; --e: cubic-bezier(.22,1,.36,1); }
+    .ssp-logo{ width:100%; height:100%; display:block; cursor:pointer; }
+    .ssp-logo .cell{ opacity:0; transform-origin:50% 50%; will-change:transform,opacity; filter:saturate(.98); transition:filter .25s ease; }
+    .logo:hover .ssp-logo .cell{ filter:brightness(1.08) saturate(1.02); }
+    @keyframes cellPop{
+      0%   { opacity:0; transform: translateY(10px) scale(.85); filter: saturate(.9) brightness(.9) }
+      60%  { opacity:1; transform: translateY(-2px) scale(1.04) }
+      80%  {            transform: translateY(0)    scale(.98)  }
+      100% { opacity:1; transform: translateY(0)    scale(1)    }
+    }
+    @media (prefers-reduced-motion: reduce){ .ssp-logo .cell{ animation:none !important; opacity:1 !important } }
     h1{ font-size: clamp(1.1rem, 1rem + 1.2vw, 1.6rem); margin:0; }
     .sub{ color:var(--muted); font-size: .95rem; }
 
@@ -200,34 +212,31 @@
       <header>
         <div class="title">
           <div class="logo" aria-hidden="true">
-            <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Logo školy (mřížka)">
-              <defs>
-                <linearGradient id="grad" x1="0" y1="0" x2="1" y2="1">
-                  <stop offset="0" stop-color="#FACC15"/>
-                  <stop offset="0.55" stop-color="#F59E0B"/>
-                  <stop offset="1" stop-color="#EF4444"/>
-                </linearGradient>
-              </defs>
-              <g fill="url(#grad)" opacity="0.9">
-                <rect x="4" y="4" width="7" height="7" rx="1.5"/>
-                <rect x="15" y="4" width="7" height="7" rx="1.5"/>
-                <rect x="26" y="4" width="7" height="7" rx="1.5"/>
-                <rect x="37" y="4" width="7" height="7" rx="1.5"/>
-
-                <rect x="4" y="15" width="7" height="7" rx="1.5"/>
-                <rect x="15" y="15" width="7" height="7" rx="1.5"/>
-                <rect x="26" y="15" width="7" height="7" rx="1.5"/>
-                <rect x="37" y="15" width="7" height="7" rx="1.5"/>
-
-                <rect x="4" y="26" width="7" height="7" rx="1.5"/>
-                <rect x="15" y="26" width="7" height="7" rx="1.5"/>
-                <rect x="26" y="26" width="7" height="7" rx="1.5"/>
-                <rect x="37" y="26" width="7" height="7" rx="1.5"/>
-
-                <rect x="4" y="37" width="7" height="7" rx="1.5"/>
-                <rect x="15" y="37" width="7" height="7" rx="1.5"/>
-                <rect x="26" y="37" width="7" height="7" rx="1.5"/>
-                <rect x="37" y="37" width="7" height="7" rx="1.5"/>
+            <!-- SSP Krnov – logo 1:1 s animacemi buněk -->
+            <svg class="ssp-logo" viewBox="0 0 376 376" role="img" aria-labelledby="t d" tabindex="0">
+              <title id="t">SSP Krnov – oranžové kostky (vektor 1:1)</title>
+              <desc id="d">Čtvercová mřížka 4×4 oranžových buněk; okolí je průhledné. Kliknutím se změní efekt.</desc>
+              <g class="cells">
+                <!-- řádek 1 -->
+                <rect class="cell" x="24"  y="24"  width="64" height="64" rx="8" fill="#EF743B"/>
+                <rect class="cell" x="112" y="24"  width="64" height="64" rx="8" fill="#F5A33F"/>
+                <rect class="cell" x="200" y="24"  width="64" height="64" rx="8" fill="#F9B641"/>
+                <rect class="cell" x="288" y="24"  width="64" height="64" rx="8" fill="#FCCA43"/>
+                <!-- řádek 2 -->
+                <rect class="cell" x="24"  y="112" width="64" height="64" rx="8" fill="#EF743B"/>
+                <rect class="cell" x="112" y="112" width="64" height="64" rx="8" fill="#F5A33F"/>
+                <rect class="cell" x="200" y="112" width="64" height="64" rx="8" fill="#F9B641"/>
+                <rect class="cell" x="288" y="112" width="64" height="64" rx="8" fill="#F9B641"/>
+                <!-- řádek 3 -->
+                <rect class="cell" x="24"  y="200" width="64" height="64" rx="8" fill="#EF743B"/>
+                <rect class="cell" x="112" y="200" width="64" height="64" rx="8" fill="#F5A33F"/>
+                <rect class="cell" x="200" y="200" width="64" height="64" rx="8" fill="#F5A33F"/>
+                <rect class="cell" x="288" y="200" width="64" height="64" rx="8" fill="#F5A33F"/>
+                <!-- řádek 4 -->
+                <rect class="cell" x="24"  y="288" width="64" height="64" rx="8" fill="#EF743B"/>
+                <rect class="cell" x="112" y="288" width="64" height="64" rx="8" fill="#EF743B"/>
+                <rect class="cell" x="200" y="288" width="64" height="64" rx="8" fill="#EF743B"/>
+                <rect class="cell" x="288" y="288" width="64" height="64" rx="8" fill="#EF743B"/>
               </g>
             </svg>
           </div>
@@ -485,5 +494,65 @@
       requestAnimationFrame(updateSegmentSlider);
     })();
   </script>
+<script>
+  // SSP Krnov – náhodné jednorázové efekty pro buňky loga (diagonal/spiral/snake/random)
+  (function(){
+    const svg = document.querySelector('.logo .ssp-logo');
+    if(!svg) return;
+    const cells = Array.from(svg.querySelectorAll('.cell'));
+    const rows = 4, cols = 4;
+    const MODES = ['diagonal','spiral','snake','random'];
+    let currentMode = null;
+
+    function spiralOrder(rows, cols){
+      const res = Array(rows * cols).fill(0);
+      let top = 0, left = 0, bottom = rows - 1, right = cols - 1, idx = 0;
+      while (top <= bottom && left <= right) {
+        for (let c = left; c <= right; c++) res[top * cols + c] = idx++;
+        top++;
+        for (let r = top; r <= bottom; r++) res[r * cols + right] = idx++;
+        right--;
+        if (top <= bottom) { for (let c = right; c >= left; c--) res[bottom * cols + c] = idx++; bottom--; }
+        if (left <= right) { for (let r = bottom; r >= top; r--) res[r * cols + left] = idx++; left++; }
+      }
+      return res;
+    }
+    const spiralIdx = spiralOrder(rows, cols);
+
+    function pickMode(exclude){ let m; do{ m = MODES[Math.floor(Math.random()*MODES.length)]; } while(m===exclude); return m; }
+
+    function resetAnimations(){
+      cells.forEach(el=>{ el.style.animation='none'; el.style.animationDelay='0s'; el.style.opacity=0; });
+      void svg.getBoundingClientRect();
+      cells.forEach(el=>{ el.style.animation=''; el.style.animationDelay=''; });
+    }
+
+    function applyMode(mode){
+      resetAnimations(); currentMode = mode; svg.dataset.mode = mode;
+      const step = 0.09; // s, rozestup mezi buňkami
+      const randOrder = Array.from({length: cells.length}, (_, i)=>i).sort(()=>Math.random()-0.5);
+      requestAnimationFrame(()=>{
+        cells.forEach((el, i)=>{
+          const r = (i/cols)|0, c = i%cols; let delay = 0;
+          if(mode==='diagonal') delay = (r+c)*step;
+          else if(mode==='snake') delay = (r*cols + (r%2 ? (cols-1-c):c))*step;
+          else if(mode==='spiral') delay = spiralIdx[i]*step;
+          else if(mode==='random') delay = randOrder.indexOf(i)*step;
+          el.style.animation = `cellPop var(--dur) var(--e) both`;
+          el.style.animationDelay = delay+'s';
+        });
+      });
+    }
+
+    function runRandom(){ applyMode(pickMode(currentMode)); }
+    runRandom();
+
+    const onActivate = () => runRandom();
+    svg.addEventListener('click', onActivate);
+    svg.addEventListener('pointerdown', (e)=>{ if(e.pointerType==='touch') onActivate(); });
+    cells.forEach(el=> el.addEventListener('click', onActivate));
+    svg.addEventListener('keydown', (e)=>{ if(e.key==='Enter' || e.key===' '){ e.preventDefault(); runRandom(); }});
+  })();
+</script>
 </body>
 </html>
