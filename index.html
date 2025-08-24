@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Stránka na výpočet hodnocení — moderní verze</title>
-  <meta name="description" content="Kalkulačka bodového hodnocení se světlým/tmavým režimem a animacemi. ZŠ/SŠ hranice, červený akcent." />
+  <title>Stránka na výpočet hodnocení — dropdown verze</title>
+  <meta name="description" content="Kalkulačka bodového hodnocení se světlým/tmavým režimem, krokovačem a stylizovaným dropdownem (Mírné/Normální/Přísné/Nejpřísnější)." />
   <style>
     :root{
       /* barevné proměnné (světlý) */
@@ -64,22 +64,14 @@
     header{
       display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:18px;
     }
-    .title{
-      display:flex; align-items:center; gap:12px;
-    }
-    .logo{ width:69px; height:69px; border-radius:12px; display:grid; place-items:center; background: transparent; box-shadow:none; -webkit-tap-highlight-color: transparent; }
+    .title{ display:flex; align-items:center; gap:12px; }
+    .logo{ width:69px; height:69px; border-radius:12px; display:grid; place-items:center; background: transparent; box-shadow:none; }
     .logo svg{ width:100%; height:100%; filter: drop-shadow(0 4px 10px var(--ring)); }
-    /* SSP Krnov – animace buněk loga */
     :root{ --dur: 900ms; --e: cubic-bezier(.22,1,.36,1); }
     .ssp-logo{ width:100%; height:100%; display:block; cursor:pointer; }
     .ssp-logo .cell{ opacity:0; transform-origin:50% 50%; will-change:transform,opacity; filter:saturate(.98); transition:filter .25s ease; }
     .logo:hover .ssp-logo .cell{ filter:brightness(1.08) saturate(1.02); }
-    @keyframes cellPop{
-      0%   { opacity:0; transform: translateY(10px) scale(.85); filter: saturate(.9) brightness(.9) }
-      60%  { opacity:1; transform: translateY(-2px) scale(1.04) }
-      80%  {            transform: translateY(0)    scale(.98)  }
-      100% { opacity:1; transform: translateY(0)    scale(1)    }
-    }
+    @keyframes cellPop{ 0%{opacity:0; transform: translateY(10px) scale(.85); filter:saturate(.9) brightness(.9)} 60%{opacity:1; transform: translateY(-2px) scale(1.04)} 80%{transform: translateY(0) scale(.98)} 100%{opacity:1; transform: translateY(0) scale(1)} }
     @media (prefers-reduced-motion: reduce){ .ssp-logo .cell{ animation:none !important; opacity:1 !important } }
     h1{ font-size: clamp(1.1rem, 1rem + 1.2vw, 1.6rem); margin:0; }
     .sub{ color:var(--muted); font-size: .95rem; }
@@ -87,12 +79,8 @@
     /* Tlačítko pro téma */
     .theme-toggle{
       --size:40px;
-      width:var(--size);
-      height:var(--size);
-      aspect-ratio:1/1; /* vždy čtverec */
-      padding:0; /* zruš UA padding, který dělá obdélník */
-      line-height:0; /* žádný extra line-box */
-      border-radius:12px; border:1px solid var(--border);
+      width:var(--size); height:var(--size); aspect-ratio:1/1;
+      padding:0; line-height:0; border-radius:12px; border:1px solid var(--border);
       background: var(--bg-soft); display:grid; place-items:center; cursor:pointer; position:relative;
       transition:.2s transform ease, .2s box-shadow ease, .2s background ease;
       -webkit-appearance: none; appearance: none;
@@ -100,57 +88,32 @@
     .theme-toggle:hover{ transform: translateY(-2px); box-shadow: var(--shadow); }
     .theme-toggle:active{ transform: translateY(0); }
     .theme-toggle svg{ width:22px; height:22px; }
-    /* zvýraznění ikony slunce v tmavém režimu */
     html[data-theme="dark"] .theme-toggle svg{ filter: drop-shadow(0 0 6px rgba(250,204,21,.55)); }
 
     /* Ovládací prvky */
     .controls{ display:grid; grid-template-columns: 1fr; gap:14px; margin: 14px 0 22px; }
+    @media (min-width: 480px){ .controls{ grid-template-columns: 1fr 1fr; align-items:center; } }
 
-    .segmented{
-      display:inline-flex; align-items:center; gap:6px; white-space:nowrap;
-      background: var(--bg-soft); border:1px solid var(--border);
-      border-radius: 14px; padding:3px; width: fit-content; min-height: 36px;
-      position: relative; overflow: hidden;
-    }
-    /* klouzavý zvýrazňovač vybrané volby */
-    
-    /* klouzavý zvýrazňovač vybrané volby */
-    .seg-slider{ position:absolute; top:4px; left: var(--seg-x, 4px); height: calc(100% - 8px); width: var(--seg-w, 50%);
-      background: var(--accent-50); border: 2px solid var(--accent-600); border-radius: 10px; z-index:0;
-      transition: left .28s cubic-bezier(.4,0,.2,1), width .28s cubic-bezier(.4,0,.2,1), background .2s ease, border-color .2s ease;
-      box-shadow: inset 0 0 0 2px var(--ring);
-    }
-    .segmented input{ display:none; }
-    .segmented label{
-      padding: 8px 14px; border-radius: 10px; cursor:pointer; user-select:none; border:2px solid transparent;
-      transition: .2s background ease, .2s color ease, .2s transform ease, .2s border-color ease; color:var(--muted);
-      font-weight:600; letter-spacing:.2px; display:inline-flex; align-items:center; justify-content:center; height:32px; min-width:54px;
-      position: relative; z-index:1;
-    }
-    .segmented input:checked + label{ color: var(--text); transform:none; }
+    .field{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
 
-    .field{ display:grid; gap:8px; }
-    .field label{ font-weight:600; }
-    .input-wrap{ display:flex; align-items:center; gap:10px; }
+    .input-wrap{ position: relative; display:flex; align-items:center; gap:10px; width:100%; }
     .input-wrap input[type="number"]{
-      width: 120px; padding: 10px 72px 10px 12px; border-radius: 12px; border:1px solid var(--border); background: var(--bg-soft);
+      width: 100%; padding: 10px 72px 10px 12px; border-radius: 12px; border:1px solid var(--border); background: var(--bg-soft);
       color:var(--text); font-weight:600; box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
       transition:.2s border-color ease, .2s box-shadow ease;
     }
-    /* schovej defaultní šedé šipky */
+    .input-wrap input[type="number"]::placeholder{ color:var(--muted); font-weight:500; }
+    .input-wrap input[type="number"]:focus{ outline:none; border-color: var(--accent); box-shadow: 0 0 0 4px var(--ring); }
+
+    /* schovej defaultní šipky */
     .input-wrap input[type="number"]::-webkit-outer-spin-button,
     .input-wrap input[type="number"]::-webkit-inner-spin-button{ -webkit-appearance: none; margin: 0; }
     .input-wrap input[type="number"]{ -moz-appearance: textfield; }
 
     /* vlastní stepper uvnitř inputu */
-    .input-wrap{ position: relative; }
-    .num{ position: relative; display: inline-block; }
     .stepper{ position:absolute; top:6px; right:6px; display:flex; gap:6px; }
-    .step{
-      width:28px; height:28px; border-radius:8px; border:1px solid var(--border); background: var(--bg-soft); color:var(--text);
-      display:grid; place-items:center; cursor:pointer;
-      /* sjednocené časování jako zbytek UI */
-      transition: .2s transform ease, .2s background-color ease, .2s border-color ease, .2s box-shadow ease, .2s color ease;
+    .step{ width:28px; height:28px; border-radius:8px; border:1px solid var(--border); background: var(--bg-soft); color:var(--text);
+      display:grid; place-items:center; cursor:pointer; transition:.2s transform ease, .2s background-color ease, .2s border-color ease, .2s box-shadow ease, .2s color ease;
       box-shadow: 0 1px 0 rgba(255,255,255,.04), 0 1px 8px rgba(0,0,0,.04);
     }
     .step:hover{ background: var(--accent-50); }
@@ -158,30 +121,34 @@
     .step:focus{ outline:none; box-shadow: 0 0 0 4px var(--ring); }
     .step svg{ width:16px; height:16px; stroke: currentColor; }
     html[data-theme="dark"] .step{ box-shadow: 0 1px 8px rgba(0,0,0,.22); }
-    
-    .input-wrap input[type="number"]:focus{ outline:none; border-color: var(--accent); box-shadow: 0 0 0 4px var(--ring); }
+
+    /* Stylizovaný dropdown */
+    .select{ position:relative; width:100%; }
+    .select select{
+      width:100%; appearance:none; -webkit-appearance:none; -moz-appearance:none;
+      padding:10px 40px 10px 12px; border-radius:12px; border:1px solid var(--border); background: var(--bg-soft);
+      color:var(--text); font-weight:600; cursor:pointer; box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
+      transition:.2s border-color ease, .2s box-shadow ease;
+    }
+    .select select:focus{ outline:none; border-color: var(--accent); box-shadow: 0 0 0 4px var(--ring); }
+    .select::after{
+      content:""; position:absolute; right:12px; top:50%; transform: translateY(-50%);
+      border-left:6px solid transparent; border-right:6px solid transparent; border-top:6px solid var(--muted);
+      width:0; height:0; pointer-events:none;
+    }
 
     .hint{ color:var(--muted); font-size:.92rem; }
 
     /* Tabulka */
-    .table{
-      width:100%; border-collapse: collapse; overflow: hidden; border-radius: 20px; border:1px solid var(--border); background: var(--bg-soft);
-    }
+    .table{ width:100%; border-collapse: collapse; overflow: hidden; border-radius: 20px; border:1px solid var(--border); background: var(--bg-soft); }
     .table th, .table td{ padding: 12px 14px; text-align:center; vertical-align: middle; }
     .table thead th{ background: linear-gradient(0deg, transparent, transparent), var(--bg-soft); position: sticky; top:0; z-index:1; border-bottom:1px solid var(--border); }
     .table tbody tr{ border-top:1px solid var(--border); transition: background .2s ease; }
     .table tbody tr:hover{ background: rgba(0,0,0,.03); }
     .table td:first-child{ width: 1%; white-space: nowrap; text-align:center; }
-    .badge{ 
-      display:inline-block; 
-      font-weight:800; 
-      font-size: clamp(1rem, 0.9rem + 0.7vw, 1.4rem);
-      letter-spacing:.3px; line-height:1.1;
-      color: var(--accent-600);
-      background: linear-gradient(90deg, var(--accent-600), var(--accent));
-      -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
-      padding: 0; border: none; border-radius: 0; background-origin: border-box;
-      text-shadow: 0 1px 0 rgba(255,255,255,.12);
+    .badge{ display:inline-block; font-weight:800; font-size: clamp(1rem, 0.9rem + 0.7vw, 1.4rem); letter-spacing:.3px; line-height:1.1;
+      color: var(--accent-600); background: linear-gradient(90deg, var(--accent-600), var(--accent)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+      padding: 0; border: none; border-radius: 0; background-origin: border-box; text-shadow: 0 1px 0 rgba(255,255,255,.12);
     }
     .range{ font-weight:700; font-variant-numeric: tabular-nums; }
     .subpct{ color: var(--muted); font-weight: 500; margin-left:8px; }
@@ -192,17 +159,6 @@
 
     footer{ margin-top: 18px; color:var(--muted); font-size:.9rem; display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; }
     .pill{ padding:6px 10px; border:1px dashed var(--border); border-radius:999px; }
-
-    /* Responsivita */
-    @media (min-width: 450px){
-      /* kompaktní formulář na širokých monitorech */
-      .controls{ display:inline-grid; grid-template-columns: auto auto; align-items:center; gap:20px; width:auto; }
-      .field{ grid-template-columns: auto auto; align-items:center; column-gap:20px; }
-      .field label{ margin: 0 6px 0 0; }
-    }
-      .field{ grid-template-columns: 1fr auto; align-items:center; }
-      .field label{ grid-column: 1 / -1; }
-    }
   </style>
 </head>
 <body>
@@ -245,38 +201,35 @@
           </div>
         </div>
         <button id="themeBtn" class="theme-toggle" aria-label="Přepnout téma (světlý/tmavý)">
-          <!-- ikona se přepíná v JS -->
           <svg id="iconMoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
         </button>
       </header>
 
       <div class="controls">
         <div class="field">
-          <label for="points">Počet bodů (max)</label>
+          <!-- Bez popisku: používáme placeholder + aria-label -->
           <div class="input-wrap">
-            <div class="num">
-              <input id="points" type="number" min="1" max="1000" step="1" value="20" inputmode="numeric" />
-              <div class="stepper" role="group" aria-label="Změna počtu bodů">
-                <button type="button" class="step down" aria-label="Snížit o 1">
-                  <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                </button>
-                <button type="button" class="step up" aria-label="Zvýšit o 1">
-                  <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                </button>
-              </div>
+            <input id="points" type="number" min="1" max="1000" step="1" value="20" inputmode="numeric" placeholder="Max. bodů" aria-label="Maximální počet bodů" />
+            <div class="stepper" role="group" aria-label="Změna počtu bodů">
+              <button type="button" class="step down" aria-label="Snížit o 1">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              </button>
+              <button type="button" class="step up" aria-label="Zvýšit o 1">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              </button>
             </div>
-            
           </div>
         </div>
 
         <div class="field">
-          <label>Druh hodnocení</label>
-          <div class="segmented">
-            <span class="seg-slider" aria-hidden="true"></span>
-            <input type="radio" name="scheme" id="ss" value="SS" checked>
-            <label for="ss" role="tab" aria-controls="table">SŠ</label>
-            <input type="radio" name="scheme" id="zs" value="ZS">
-            <label for="zs" role="tab" aria-controls="table">ZŠ</label>
+          <!-- Nahradil jsem segment přepínač stylizovaným dropdownem -->
+          <div class="select">
+            <select id="scheme" aria-label="Druh hodnocení">
+              <option value="MIRNE">Mírné</option>
+              <option value="NORMALNI" selected>Normální</option>
+              <option value="PRISNE">Přísné</option>
+              <option value="NEJPRISNEJSI">Nejpřísnější</option>
+            </select>
           </div>
         </div>
       </div>
@@ -288,12 +241,9 @@
             <th>Rozpětí (body)</th>
           </tr>
         </thead>
-        <tbody id="tbody">
-          <!-- plní JS -->
-        </tbody>
+        <tbody id="tbody"><!-- plní JS --></tbody>
       </table>
 
-      
     </div>
   </div>
 
@@ -301,15 +251,17 @@
     // ==============================
     //  Konfigurace hranic procent
     // ==============================
-    // Definice jako pole dolních hranic v procentech (sestupně po známkách 1→5)
+    // pairs: [upper%, lower%] pro známky 1..5
     const PERCENTS = {
-      SS: { name: 'SŠ', pairs: [[100,85],[84,69],[68,52],[51,33],[32,0]] }, // podle původního skriptu
-      ZS: { name: 'ZŠ', pairs: [[100,90],[89,75],[74,45],[44,25],[24,0]] },
+      NORMALNI:   { name: 'Normální',      pairs: [[100,85],[84,69],[68,52],[51,33],[32,0]] },
+      MIRNE:      { name: 'Mírné',          pairs: [[100,90],[89,75],[74,45],[44,25],[24,0]] },
+      PRISNE:     { name: 'Přísné',         pairs: [[100,90],[89,75],[74,60],[59,50],[49,0]] },
+      NEJPRISNEJSI:{ name: 'Nejpřísnější',  pairs: [[100,90],[89,80],[79,70],[69,60],[59,0]] },
     };
 
     // DOM prvky
     const pointsEl = document.getElementById('points');
-    const schemeRadios = document.querySelectorAll('input[name="scheme"]');
+    const schemeSelect = document.getElementById('scheme');
     const tbody = document.getElementById('tbody');
     const themeBtn = document.getElementById('themeBtn');
 
@@ -334,7 +286,6 @@
       }else{
         document.documentElement.setAttribute('data-theme', mode);
       }
-      // ikona: v tmavém režimu světlejší slunce se žlutou výplní
       if(document.documentElement.getAttribute('data-theme') === 'dark'){
         themeBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="#FACC15" stroke="#FACC15" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>';
       }else{
@@ -343,59 +294,36 @@
     }
 
     // ==============================
-    //  Animovaný přepínač (slider) pro SŠ/ZŠ
-    // ==============================
-    const segEl = document.querySelector('.segmented');
-    const segSlider = segEl.querySelector('.seg-slider');
-
-    function updateSegmentSlider(){
-      const checked = document.querySelector('input[name="scheme"]:checked');
-      if(!checked) return;
-      const label = segEl.querySelector(`label[for="${checked.id}"]`);
-      if(!label) return;
-      const r1 = label.getBoundingClientRect();
-      const r0 = segEl.getBoundingClientRect();
-      const x = r1.left - r0.left; // včetně paddingu parenta
-      const w = r1.width;
-      segEl.style.setProperty('--seg-x', `${x}px`);
-      segEl.style.setProperty('--seg-w', `${w}px`);
-    }
-
-    window.addEventListener('resize', ()=> requestAnimationFrame(updateSegmentSlider));
-    // ==============================
     //  Přepočet tabulky
     // ==============================
     function updateTable(){
-      const raw = document.getElementById('points').value;
+      const raw = pointsEl.value;
       let max;
 
-      // prázdný vstup => 0 (bez upozornění)
       if(raw.trim() === ''){
-        max = 0;
+        max = 0; // prázdný vstup => 0 (bez upozornění)
       }else{
         max = parseInt(raw, 10);
         if(Number.isNaN(max)){
-          // neplatné číslo => ber jako 0, bez alertu
           max = 0;
         }else{
-          // zachovej původní validace pro skutečně zadaná čísla
           if(max < 1){
             alert('Počet bodů nemůže být záporný ani nula!!');
-            document.getElementById('points').value = '20';
+            pointsEl.value = '20';
             updateTable();
             return;
           }
           if(max > 1000){
             alert('Počet bodů nemůže být víc než 1000!');
-            document.getElementById('points').value = '20';
+            pointsEl.value = '20';
             updateTable();
             return;
           }
         }
       }
 
-      const scheme = document.querySelector('input[name="scheme"]:checked').value; // 'SS' nebo 'ZS'
-      const pairs = PERCENTS[scheme].pairs; // [[upper%, lower%], ...] pro známky 1..5
+      const scheme = schemeSelect.value; // 'NORMALNI' | 'MIRNE' | 'PRISNE' | 'NEJPRISNEJSI'
+      const pairs = PERCENTS[scheme].pairs;
 
       tbody.innerHTML = '';
 
@@ -405,7 +333,6 @@
         const upperPts = last;
         const lowerPts = Math.ceil(max * (lowerPct/100));
 
-        // při max=0 zabraň záporným číslům ve výpisu
         const u = Math.max(0, upperPts);
         const l = Math.max(0, lowerPts);
 
@@ -429,18 +356,16 @@
 
     // Obsluha vstupů
     pointsEl.addEventListener('input', () => updateTable());
-    schemeRadios.forEach(r=> r.addEventListener('change', ()=>{ updateTable(); updateSegmentSlider(); }));
+    schemeSelect.addEventListener('change', () => { updateTable(); schemeSelect.classList.add('pop'); setTimeout(()=>schemeSelect.classList.remove('pop'), 350); });
 
     // vlastní stepper tlačítka
     const btnUp = document.querySelector('.step.up');
     const btnDown = document.querySelector('.step.down');
 
     function changeBy(delta){
-      // pokud je prázdno, začni od 0
       if(pointsEl.value.trim()==='') pointsEl.value = '0';
       const before = Number(pointsEl.value||0);
       let next = before + delta;
-      // respektuj min/max atributy
       const min = Number(pointsEl.min||1), max = Number(pointsEl.max||1000);
       next = Math.max(min, Math.min(max, next));
       pointsEl.value = String(next);
@@ -450,25 +375,16 @@
     btnUp.addEventListener('click', () => changeBy(1));
     btnDown.addEventListener('click', () => changeBy(-1));
 
-    // podržení tlačítka = rychlé opakování
     function addHoldRepeat(el, delta){
-      let holdTimeout = null, repeatInterval = null, holding = false;
+      let holdTimeout = null, repeatInterval = null;
       const HOLD_DELAY = 450;   // prodleva, než se spustí rychlé opakování
       const STEP_EVERY = 90;    // rychlost opakování
 
       const start = () => {
-        holding = true;
-        // žádné okamžité přičtení tady – single click vyřeší 'click' handler
         clearTimeout(holdTimeout); clearInterval(repeatInterval);
-        holdTimeout = setTimeout(()=>{
-          // začne opakovat až po prodlevě
-          repeatInterval = setInterval(()=> changeBy(delta), STEP_EVERY);
-        }, HOLD_DELAY);
+        holdTimeout = setTimeout(()=>{ repeatInterval = setInterval(()=> changeBy(delta), STEP_EVERY); }, HOLD_DELAY);
       };
-      const stop = () => {
-        holding = false;
-        clearTimeout(holdTimeout); clearInterval(repeatInterval);
-      };
+      const stop = () => { clearTimeout(holdTimeout); clearInterval(repeatInterval); };
 
       el.addEventListener('mousedown', start);
       el.addEventListener('touchstart', start, {passive:true});
@@ -479,80 +395,84 @@
     }
     addHoldRepeat(btnUp, +1);
     addHoldRepeat(btnDown, -1);
-    schemeRadios.forEach(r=> r.addEventListener('change', ()=>{ updateTable(); updateSegmentSlider(); }));
 
-    // Inicializace z localStorage + první výpočet
+    // Inicializace z localStorage + první výpočet (vč. mapování starých hodnot ZŠ/SŠ)
     (function init(){
       const savedPoints = Number(localStorage.getItem('points'));
-      const savedScheme = localStorage.getItem('scheme');
+      let savedScheme = localStorage.getItem('scheme');
       if(savedPoints && savedPoints>0) pointsEl.value = String(Math.floor(savedPoints));
-      if(savedScheme && (savedScheme==='SS'||savedScheme==='ZS')){
-        document.querySelector(`input[name="scheme"][value="${savedScheme}"]`).checked = true;
+      // mapování starých hodnot na nové
+      if(savedScheme === 'SS') savedScheme = 'NORMALNI';
+      if(savedScheme === 'ZS') savedScheme = 'MIRNE';
+      const allowed = ['MIRNE','NORMALNI','PRISNE','NEJPRISNEJSI'];
+      if(savedScheme && allowed.includes(savedScheme)){
+        schemeSelect.value = savedScheme;
+      }else{
+        schemeSelect.value = 'NORMALNI'; // default
       }
       updateTable();
-      // po prvním vykreslení nastav slider
-      requestAnimationFrame(updateSegmentSlider);
     })();
   </script>
-<script>
-  // SSP Krnov – náhodné jednorázové efekty pro buňky loga (diagonal/spiral/snake/random)
-  (function(){
-    const svg = document.querySelector('.logo .ssp-logo');
-    if(!svg) return;
-    const cells = Array.from(svg.querySelectorAll('.cell'));
-    const rows = 4, cols = 4;
-    const MODES = ['diagonal','spiral','snake','random'];
-    let currentMode = null;
 
-    function spiralOrder(rows, cols){
-      const res = Array(rows * cols).fill(0);
-      let top = 0, left = 0, bottom = rows - 1, right = cols - 1, idx = 0;
-      while (top <= bottom && left <= right) {
-        for (let c = left; c <= right; c++) res[top * cols + c] = idx++;
-        top++;
-        for (let r = top; r <= bottom; r++) res[r * cols + right] = idx++;
-        right--;
-        if (top <= bottom) { for (let c = right; c >= left; c--) res[bottom * cols + c] = idx++; bottom--; }
-        if (left <= right) { for (let r = bottom; r >= top; r--) res[r * cols + left] = idx++; left++; }
+  <script>
+    // SSP Krnov – náhodné jednorázové efekty pro buňky loga (diagonal/spiral/snake/random)
+    (function(){
+      const svg = document.querySelector('.logo .ssp-logo');
+      if(!svg) return;
+      const cells = Array.from(svg.querySelectorAll('.cell'));
+      const rows = 4, cols = 4;
+      const MODES = ['diagonal','spiral','snake','random'];
+      let currentMode = null;
+
+      function spiralOrder(rows, cols){
+        const res = Array(rows * cols).fill(0);
+        let top = 0, left = 0, bottom = rows - 1, right = cols - 1, idx = 0;
+        while (top <= bottom && left <= right) {
+          for (let c = left; c <= right; c++) res[top * cols + c] = idx++;
+          top++;
+          for (let r = top; r <= bottom; r++) res[r * cols + right] = idx++;
+          right--;
+          if (top <= bottom) { for (let c = right; c >= left; c--) res[bottom * cols + c] = idx++; bottom--; }
+          if (left <= right) { for (let r = bottom; r >= top; r--) res[r * cols + left] = idx++; left++; }
+        }
+        return res;
       }
-      return res;
-    }
-    const spiralIdx = spiralOrder(rows, cols);
+      const spiralIdx = spiralOrder(rows, cols);
 
-    function pickMode(exclude){ let m; do{ m = MODES[Math.floor(Math.random()*MODES.length)]; } while(m===exclude); return m; }
+      function pickMode(exclude){ let m; do{ m = MODES[Math.floor(Math.random()*MODES.length)]; } while(m===exclude); return m; }
 
-    function resetAnimations(){
-      cells.forEach(el=>{ el.style.animation='none'; el.style.animationDelay='0s'; el.style.opacity=0; });
-      void svg.getBoundingClientRect();
-      cells.forEach(el=>{ el.style.animation=''; el.style.animationDelay=''; });
-    }
+      function resetAnimations(){
+        cells.forEach(el=>{ el.style.animation='none'; el.style.animationDelay='0s'; el.style.opacity=0; });
+        void svg.getBoundingClientRect();
+        cells.forEach(el=>{ el.style.animation=''; el.style.animationDelay=''; });
+      }
 
-    function applyMode(mode){
-      resetAnimations(); currentMode = mode; svg.dataset.mode = mode;
-      const step = 0.09; // s, rozestup mezi buňkami
-      const randOrder = Array.from({length: cells.length}, (_, i)=>i).sort(()=>Math.random()-0.5);
-      requestAnimationFrame(()=>{
-        cells.forEach((el, i)=>{
-          const r = (i/cols)|0, c = i%cols; let delay = 0;
-          if(mode==='diagonal') delay = (r+c)*step;
-          else if(mode==='snake') delay = (r*cols + (r%2 ? (cols-1-c):c))*step;
-          else if(mode==='spiral') delay = spiralIdx[i]*step;
-          else if(mode==='random') delay = randOrder.indexOf(i)*step;
-          el.style.animation = `cellPop var(--dur) var(--e) both`;
-          el.style.animationDelay = delay+'s';
+      function applyMode(mode){
+        resetAnimations(); currentMode = mode; svg.dataset.mode = mode;
+        const step = 0.09; // s, rozestup mezi buňkami
+        const randOrder = Array.from({length: cells.length}, (_, i)=>i).sort(()=>Math.random()-0.5);
+        requestAnimationFrame(()=>{
+          cells.forEach((el, i)=>{
+            const r = (i/cols)|0, c = i%cols; let delay = 0;
+            if(mode==='diagonal') delay = (r+c)*step;
+            else if(mode==='snake') delay = (r*cols + (r%2 ? (cols-1-c):c))*step;
+            else if(mode==='spiral') delay = spiralIdx[i]*step;
+            else if(mode==='random') delay = randOrder.indexOf(i)*step;
+            el.style.animation = `cellPop var(--dur) var(--e) both`;
+            el.style.animationDelay = delay+'s';
+          });
         });
-      });
-    }
+      }
 
-    function runRandom(){ applyMode(pickMode(currentMode)); }
-    runRandom();
+      function runRandom(){ applyMode(pickMode(currentMode)); }
+      runRandom();
 
-    const onActivate = () => runRandom();
-    svg.addEventListener('click', onActivate);
-    svg.addEventListener('pointerdown', (e)=>{ if(e.pointerType==='touch') onActivate(); });
-    cells.forEach(el=> el.addEventListener('click', onActivate));
-    svg.addEventListener('keydown', (e)=>{ if(e.key==='Enter' || e.key===' '){ e.preventDefault(); runRandom(); }});
-  })();
-</script>
+      const onActivate = () => runRandom();
+      svg.addEventListener('click', onActivate);
+      svg.addEventListener('pointerdown', (e)=>{ if(e.pointerType==='touch') onActivate(); });
+      cells.forEach(el=> el.addEventListener('click', onActivate));
+      svg.addEventListener('keydown', (e)=>{ if(e.key==='Enter' || e.key===' '){ e.preventDefault(); runRandom(); }});
+    })();
+  </script>
 </body>
 </html>
